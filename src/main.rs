@@ -53,6 +53,15 @@ fn main() -> ! {
         delay.delay_ms(300_u16);
         led.set_high();
 
+        // Enable watchdog
+        p.IWDG.kr.write (|w| unsafe { w.key().bits(0x0000_CCCC) });
+
+        // Enable watchdog register access
+        p.IWDG.kr.write (|w| unsafe { w.key().bits(0x0000_5555) });
+
+        // Set watchdog divider to 32 (i.e. timeout of 0xfff / (40kHz / 32))
+        p.IWDG.pr.write (|w|  w.pr().bits(3));
+
         let scl = gpiof
             .pf1
             .into_alternate_af1()
@@ -120,6 +129,9 @@ fn main() -> ! {
 
             led.set_high();
             disp.flush().unwrap();
+
+            // Reset watchdog
+            p.IWDG.kr.write (|w| unsafe { w.key().bits(0x0000_AAAA) });
         }
     }
 
