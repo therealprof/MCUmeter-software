@@ -9,17 +9,21 @@ extern crate stm32f042_hal as hal;
 
 extern crate shared_bus;
 
+extern crate embedded_graphics;
+extern crate heapless;
 extern crate ina260;
-extern crate numtoa;
 extern crate ssd1306;
+
+use heapless::consts::*;
+use heapless::String;
 
 use cortex_m_rt::entry;
 
+use embedded_graphics::fonts::Font12x16;
+use embedded_graphics::prelude::*;
 use ina260::INA260;
-use ssd1306::mode::TerminalMode;
+use ssd1306::mode::GraphicsMode;
 use ssd1306::Builder;
-
-use numtoa::NumToA;
 
 use hal::delay::Delay;
 use hal::i2c::*;
@@ -39,10 +43,14 @@ fn main() -> ! {
         let mut rcc = p.RCC.constrain();
         let clocks = rcc.cfgr.sysclk(48.mhz()).freeze();
 
-        /* Get delay provider */
+        // Get delay provider
         let mut delay = Delay::new(cp.SYST, clocks);
 
         let mut led = gpioa.pa1.into_push_pull_output();
+        led.set_high();
+        delay.delay_ms(300_u16);
+        led.set_low();
+        delay.delay_ms(300_u16);
         led.set_high();
 
         let scl = gpiof
@@ -56,70 +64,66 @@ fn main() -> ! {
             .internal_pull_up(true)
             .set_open_drain();
 
-        /* Setup I2C1 */
+        // Setup I2C1
         let mut i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz());
 
         let i2c_bus = shared_bus::CortexMBusManager::new(i2c);
 
-        let mut disp: TerminalMode<_> = Builder::new()
-            .with_i2c_addr(0x3c)
-            .connect_i2c(i2c_bus.acquire())
-            .into();
-        delay.delay_ms(300_u16);
-        led.set_low();
-        delay.delay_ms(300_u16);
-        led.set_high();
+        let mut disp: GraphicsMode<_> = Builder::new().connect_i2c(i2c_bus.acquire()).into();
 
         disp.init().unwrap();
-
-        let _ = disp.clear();
-        let _ = disp.write_str("Initialising INA260 at I2C address 0x40...\n\r");
-        delay.delay_ms(300_u16);
+        disp.flush().unwrap();
 
         let mut ina260 = INA260::new(i2c_bus.acquire(), 0x40).unwrap();
-        let _ = disp.clear();
 
-        /* Endless loop */
+        // Endless loop
         loop {
-            /* Read voltage */
-            let voltage = ina260.voltage().unwrap();
+            led.set_low();
 
-            /* Read current */
-            let current = ina260.current().unwrap();
-
-            /* Read power */
-            let power = ina260.power().unwrap();
-
-            let _ = write!(
-                disp,
-                "U: {:2}.{:04} V    ",
-                voltage / 1000000,
-                (voltage % 1000000) / 100
-            );
-
-            let _ = write!(
-                disp,
-                "I: {:2}.{:04} A    ",
-                current / 1000000,
-                (current.abs() % 1000000) / 100
-            );
-
-            let _ = write!(
-                disp,
-                "P: {:2}.{:04} W    ",
-                power / 1000000,
-                (power % 1000000) / 100
-            );
-
-            for _ in 0..5 * 16 {
-                let _ = disp.print_char(' ');
+            // Read voltage
+            {
+                let (major, minor) = ina260.voltage_split().unwrap();
+                let mut v: String<U10> = String::new();
+                let _ = write!(v, "{:3}.{:05}V", major, minor);
+                disp.draw(
+                    Font12x16::render_str(v.as_str())
+                        .with_stroke(Some(1u8.into()))
+                        .into_iter(),
+                );
             }
 
-            led.set_low();
-            delay.delay_ms(50_u16);
+            // Read current
+            {
+                let (major, minor) = ina260.current_split().unwrap();
+                let mut v: String<U10> = String::new();
+                let _ = write!(v, "{:3}.{:05}A", major, minor);
+                disp.draw(
+                    Font12x16::render_str(v.as_str())
+                        .with_stroke(Some(1u8.into()))
+                        .translate(Coord::new(0, 16))
+                        .into_iter(),
+                );
+            }
+
+            // Read power
+            {
+                let (major, minor) = ina260.power_split().unwrap();
+                let mut v: String<U10> = String::new();
+                let _ = write!(v, "{:3}.{:05}W", major, minor);
+                disp.draw(
+                    Font12x16::render_str(v.as_str())
+                        .with_stroke(Some(1u8.into()))
+                        .translate(Coord::new(0, 32))
+                        .into_iter(),
+                );
+            }
+
             led.set_high();
+            disp.flush().unwrap();
         }
     }
 
-    loop {}
+    loop {
+        continue;
+    }
 }

@@ -21,8 +21,9 @@ cortex-m = "0.5.8"
 cortex-m-rt = "0.6.5"
 ssd1306 = "0.2.1"
 panic-halt = "0.2.0"
-ina260 = "0.2.3"
+ina260 = "0.2.4"
 embedded-graphics = "0.4.4"
+heapless = "0.4.0"
 
 [dependencies.embedded-hal]
 features = ["unproven"]
@@ -30,7 +31,7 @@ version = "0.2.2"
 
 [dependencies.stm32f042-hal]
 features = ["rt"]
-version = "0.6.4"
+version = "0.6.5"
 
 [dependencies.shared-bus]
 features = ["cortexm"]
