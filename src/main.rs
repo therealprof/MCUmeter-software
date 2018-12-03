@@ -54,13 +54,13 @@ fn main() -> ! {
         led.set_high();
 
         // Enable watchdog
-        p.IWDG.kr.write (|w| unsafe { w.key().bits(0x0000_CCCC) });
+        p.IWDG.kr.write(|w| unsafe { w.key().bits(0x0000_CCCC) });
 
         // Enable watchdog register access
-        p.IWDG.kr.write (|w| unsafe { w.key().bits(0x0000_5555) });
+        p.IWDG.kr.write(|w| unsafe { w.key().bits(0x0000_5555) });
 
         // Set watchdog divider to 32 (i.e. timeout of 0xfff / (40kHz / 32))
-        p.IWDG.pr.write (|w|  w.pr().bits(3));
+        p.IWDG.pr.write(|w| w.pr().bits(3));
 
         let scl = gpiof
             .pf1
@@ -85,6 +85,15 @@ fn main() -> ! {
 
         let mut ina260 = INA260::new(i2c_bus.acquire(), 0x40).unwrap();
 
+        // Slow down sampling a bit for more accuracy
+        ina260
+            .set_bvconvtime_mode(ina260::BVConvTime::MS4_156)
+            .unwrap();
+        ina260
+            .set_scconvtime_mode(ina260::SCConvTime::MS4_156)
+            .unwrap();
+        ina260.set_averaging_mode(ina260::Averaging::AVG16).unwrap();
+
         // Endless loop
         loop {
             led.set_low();
@@ -93,7 +102,7 @@ fn main() -> ! {
             {
                 let (major, minor) = ina260.voltage_split().unwrap();
                 let mut v: String<U10> = String::new();
-                let _ = write!(v, "{:3}.{:05}V", major, minor);
+                write!(v, "{:3}.{:05}V", major, minor).unwrap();
                 disp.draw(
                     Font12x16::render_str(v.as_str())
                         .with_stroke(Some(1u8.into()))
@@ -105,7 +114,7 @@ fn main() -> ! {
             {
                 let (major, minor) = ina260.current_split().unwrap();
                 let mut v: String<U10> = String::new();
-                let _ = write!(v, "{:3}.{:05}A", major, minor);
+                write!(v, "{:3}.{:05}A", major, minor).unwrap();
                 disp.draw(
                     Font12x16::render_str(v.as_str())
                         .with_stroke(Some(1u8.into()))
@@ -118,7 +127,7 @@ fn main() -> ! {
             {
                 let (major, minor) = ina260.power_split().unwrap();
                 let mut v: String<U10> = String::new();
-                let _ = write!(v, "{:3}.{:05}W", major, minor);
+                write!(v, "{:3}.{:05}W", major, minor).unwrap();
                 disp.draw(
                     Font12x16::render_str(v.as_str())
                         .with_stroke(Some(1u8.into()))
@@ -131,7 +140,7 @@ fn main() -> ! {
             disp.flush().unwrap();
 
             // Reset watchdog
-            p.IWDG.kr.write (|w| unsafe { w.key().bits(0x0000_AAAA) });
+            p.IWDG.kr.write(|w| unsafe { w.key().bits(0x0000_AAAA) });
         }
     }
 
