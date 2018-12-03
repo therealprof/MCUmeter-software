@@ -4,7 +4,7 @@ categories = [
     "embedded",
     "no-std",
 ]
-description = "Firmware for my MCU power meter based upon STM32F042 and IN260"
+description = "Firmware for my MCU power meter based upon STM32F042 and INA260"
 documentation = "https://docs.rs/powermeter"
 keywords = [
     "arm",
@@ -21,7 +21,7 @@ cortex-m = "0.5.8"
 cortex-m-rt = "0.6.5"
 ssd1306 = "0.2.1"
 panic-halt = "0.2.0"
-ina260 = "0.2.4"
+ina260 = "0.2.5"
 embedded-graphics = "0.4.4"
 heapless = "0.4.0"
 
