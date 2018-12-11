@@ -1,18 +1,9 @@
 #![no_main]
 #![no_std]
 
-extern crate cortex_m;
-extern crate cortex_m_rt;
-extern crate panic_halt;
+use panic_halt;
 
-extern crate stm32f042_hal as hal;
-
-extern crate shared_bus;
-
-extern crate embedded_graphics;
-extern crate heapless;
-extern crate ina260;
-extern crate ssd1306;
+use stm32f0xx_hal as hal;
 
 use heapless::consts::*;
 use heapless::String;
@@ -25,10 +16,10 @@ use ina260::INA260;
 use ssd1306::mode::GraphicsMode;
 use ssd1306::Builder;
 
-use hal::delay::Delay;
-use hal::i2c::*;
-use hal::prelude::*;
-use hal::stm32;
+use crate::hal::delay::Delay;
+use crate::hal::i2c::*;
+use crate::hal::prelude::*;
+use crate::hal::stm32;
 
 use cortex_m::peripheral::Peripherals;
 
@@ -40,7 +31,7 @@ fn main() -> ! {
         let gpioa = p.GPIOA.split();
         let gpiof = p.GPIOF.split();
 
-        let mut rcc = p.RCC.constrain();
+        let rcc = p.RCC.constrain();
         let clocks = rcc.cfgr.sysclk(48.mhz()).freeze();
 
         // Get delay provider
@@ -74,7 +65,7 @@ fn main() -> ! {
             .set_open_drain();
 
         // Setup I2C1
-        let mut i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz());
+        let i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz());
 
         let i2c_bus = shared_bus::CortexMBusManager::new(i2c);
 
