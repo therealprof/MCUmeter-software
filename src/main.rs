@@ -20,6 +20,8 @@ use crate::hal::delay::Delay;
 use crate::hal::i2c::*;
 use crate::hal::prelude::*;
 use crate::hal::stm32;
+use crate::hal::time::Hertz;
+use crate::hal::watchdog::Watchdog;
 
 use cortex_m::peripheral::Peripherals;
 
@@ -44,14 +46,11 @@ fn main() -> ! {
         delay.delay_ms(300_u16);
         led.set_high();
 
-        // Enable watchdog
-        p.IWDG.kr.write(|w| w.key().start());
+        // Disable the watchdog when the cpu is stopped under debug
+        p.DBGMCU.apb1_fz.modify(|_, w| w.dbg_iwdg_stop().set_bit());
 
-        // Enable watchdog register access
-        p.IWDG.kr.write(|w| w.key().enable());
-
-        // Set watchdog divider to 32 (i.e. timeout of 0xfff / (40kHz / 32))
-        p.IWDG.pr.write(|w| w.pr().bits(3));
+        let mut watchdog = Watchdog::new(p.IWDG);
+        watchdog.start(Hertz(1));
 
         let scl = gpiof
             .pf1
@@ -131,7 +130,7 @@ fn main() -> ! {
             disp.flush().unwrap();
 
             // Reset watchdog
-            p.IWDG.kr.write(|w| w.key().reset());
+            watchdog.feed();
         }
     }
 
