@@ -6,15 +6,15 @@ categories = [
     "no-std",
 ]
 description = "Firmware for my MCU power meter based upon STM32F042 and INA260"
-documentation = "https://docs.rs/powermeter"
+documentation = "https://docs.rs/mcumeter"
 keywords = [
     "arm",
     "cortex-m",
     "template",
 ]
 license = "0BSD"
-name = "powermeter"
-repository = "https://github.com/therealprof/powermeter"
+name = "mcumeter"
+repository = "https://github.com/therealprof/MCUmeter-software"
 version = "0.1.0"
 
 [dependencies]
