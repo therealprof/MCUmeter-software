@@ -16,6 +16,7 @@ license = "0BSD"
 name = "mcumeter"
 repository = "https://github.com/therealprof/MCUmeter-software"
 version = "0.1.0"
+readme = "README.md"
 
 [dependencies]
 cortex-m = "0.5.8"
