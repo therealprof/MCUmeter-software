@@ -46,6 +46,7 @@ rt = []
 
 [profile.dev]
 debug = true
+opt-level = "s"
 
 [profile.release]
 debug = true
