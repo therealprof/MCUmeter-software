@@ -1,8 +1,9 @@
 # mcumeter
 
 The _mcumeter_ crate contains a firmware written in Rust for the custom
-designed power meter board based upon a ST Microelectronics STM32F042 MCU and a
-Texas instruments INA260 power meter.
+designed power meter board based upon a ST Microelectronics STM32F042 MCU and a Texas instruments INA260 power meter.
+
+The hardware is also open source and can be found [in this repository](https://github.com/therealprof/mcumeter-hardware).
 
 ## Building
 
