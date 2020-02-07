@@ -1,8 +1,7 @@
 #![no_main]
 #![no_std]
 
-#[allow(unused)]
-use panic_halt;
+use panic_halt as _;
 
 use stm32f0xx_hal as hal;
 
@@ -41,11 +40,11 @@ fn main() -> ! {
             let mut delay = Delay::new(cp.SYST, &rcc);
 
             let mut led = gpioa.pa1.into_push_pull_output(cs);
-            led.set_high();
+            led.set_high().ok();
             delay.delay_ms(300_u16);
-            led.set_low();
+            led.set_low().ok();
             delay.delay_ms(300_u16);
-            led.set_high();
+            led.set_high().ok();
 
             // Disable the watchdog when the cpu is stopped under debug
             p.DBGMCU.apb1_fz.modify(|_, w| w.dbg_iwdg_stop().set_bit());
@@ -71,10 +70,10 @@ fn main() -> ! {
 
             let mut disp: GraphicsMode<_> = Builder::new().connect_i2c(i2c_bus.acquire()).into();
 
-            disp.init().unwrap();
-            disp.flush().unwrap();
+            disp.init().map_err(drop).unwrap();
+            disp.flush().map_err(drop).unwrap();
 
-            let mut ina260 = INA260::new(i2c_bus.acquire(), 0x40).unwrap();
+            let mut ina260 = INA260::new(i2c_bus.acquire(), 0x40).map_err(drop).unwrap();
 
             // Slow down sampling a bit for more accuracy
             ina260
@@ -83,17 +82,22 @@ fn main() -> ! {
             ina260
                 .set_scconvtime_mode(ina260::SCConvTime::MS4_156)
                 .unwrap();
-            ina260.set_averaging_mode(ina260::Averaging::AVG16).unwrap();
+            ina260
+                .set_averaging_mode(ina260::Averaging::AVG16)
+                .map_err(drop)
+                .unwrap();
 
             // Endless loop
             loop {
-                led.set_low();
+                led.set_low().ok();
 
                 // Read voltage
                 {
-                    let (major, minor) = ina260.voltage_split().unwrap();
+                    let (major, minor) = ina260.voltage_split().map_err(drop).unwrap();
                     let mut v: String<U10> = String::new();
-                    write!(v, "{:3}.{:05}V", major, minor).unwrap();
+                    write!(v, "{:3}.{:05}V", major, minor)
+                        .map_err(drop)
+                        .unwrap();
                     disp.draw(
                         Font12x16::render_str(v.as_str())
                             .with_stroke(Some(1u8.into()))
@@ -103,9 +107,11 @@ fn main() -> ! {
 
                 // Read current
                 {
-                    let (major, minor) = ina260.current_split().unwrap();
+                    let (major, minor) = ina260.current_split().map_err(drop).unwrap();
                     let mut v: String<U10> = String::new();
-                    write!(v, "{:3}.{:05}A", major, minor).unwrap();
+                    write!(v, "{:3}.{:05}A", major, minor)
+                        .map_err(drop)
+                        .unwrap();
                     disp.draw(
                         Font12x16::render_str(v.as_str())
                             .with_stroke(Some(1u8.into()))
@@ -116,9 +122,11 @@ fn main() -> ! {
 
                 // Read power
                 {
-                    let (major, minor) = ina260.power_split().unwrap();
+                    let (major, minor) = ina260.power_split().map_err(drop).unwrap();
                     let mut v: String<U10> = String::new();
-                    write!(v, "{:3}.{:05}W", major, minor).unwrap();
+                    write!(v, "{:3}.{:05}W", major, minor)
+                        .map_err(drop)
+                        .unwrap();
                     disp.draw(
                         Font12x16::render_str(v.as_str())
                             .with_stroke(Some(1u8.into()))
@@ -127,8 +135,7 @@ fn main() -> ! {
                     );
                 }
 
-                led.set_high();
-                disp.flush().unwrap();
+                disp.flush().map_err(drop).unwrap();
 
                 // Reset watchdog
                 watchdog.feed();
