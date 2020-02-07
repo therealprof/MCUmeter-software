@@ -19,30 +19,26 @@ version = "0.1.1"
 readme = "README.md"
 
 [dependencies]
-cortex-m = "0.5.8"
-cortex-m-rt = "0.6.7"
-ssd1306 = "0.2.2"
-panic-halt = "0.2.0"
-ina260 = "0.2.6"
-embedded-graphics = "0.4.5"
-heapless = "0.4.1"
+cortex-m = "0.6"
+cortex-m-rt = "0.6"
+ssd1306 = "0.2"
+panic-halt = "0.2"
+ina260 = "0.3"
+embedded-graphics = "0.4" 
+heapless = "0.5"
 
 [dependencies.embedded-hal]
 features = ["unproven"]
-version = "0.2.2"
+version = "0.2"
 
 [dependencies.stm32f0xx-hal]
 features = ["stm32f042", "rt"]
-version = "0.12.0"
+version = "0.16"
 
 [dependencies.shared-bus]
 features = ["cortexm"]
 optional = false
-version = "0.1.4"
-
-[features]
-default = ["rt"]
-rt = []
+version = "0.1"
 
 [profile.dev]
 debug = true
