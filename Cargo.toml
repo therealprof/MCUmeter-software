@@ -15,16 +15,16 @@ keywords = [
 license = "0BSD"
 name = "mcumeter"
 repository = "https://github.com/therealprof/MCUmeter-software"
-version = "0.1.1"
+version = "0.1.2"
 readme = "README.md"
 
 [dependencies]
 cortex-m = "0.6"
 cortex-m-rt = "0.6"
-ssd1306 = "0.2"
+ssd1306 = "0.3"
 panic-halt = "0.2"
 ina260 = "0.3"
-embedded-graphics = "0.4" 
+embedded-graphics = "0.6"
 heapless = "0.5"
 
 [dependencies.embedded-hal]

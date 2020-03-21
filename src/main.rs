@@ -10,8 +10,12 @@ use heapless::String;
 
 use cortex_m_rt::entry;
 
-use embedded_graphics::fonts::Font12x16;
-use embedded_graphics::prelude::*;
+use embedded_graphics::{
+    fonts::{Font12x16, Text},
+    pixelcolor::BinaryColor,
+    prelude::*,
+    style::TextStyleBuilder,
+};
 use ina260::INA260;
 use ssd1306::mode::GraphicsMode;
 use ssd1306::Builder;
@@ -68,6 +72,10 @@ fn main() -> ! {
 
             let i2c_bus = shared_bus::CortexMBusManager::new(i2c);
 
+            let text_style = TextStyleBuilder::new(Font12x16)
+                .text_color(BinaryColor::On)
+                .build();
+
             let mut disp: GraphicsMode<_> = Builder::new().connect_i2c(i2c_bus.acquire()).into();
 
             disp.init().map_err(drop).unwrap();
@@ -91,6 +99,9 @@ fn main() -> ! {
             loop {
                 led.set_low().ok();
 
+                // Clear screen contents
+                disp.clear();
+
                 // Read voltage
                 {
                     let (major, minor) = ina260.voltage_split().map_err(drop).unwrap();
@@ -98,11 +109,11 @@ fn main() -> ! {
                     write!(v, "{:3}.{:05}V", major, minor)
                         .map_err(drop)
                         .unwrap();
-                    disp.draw(
-                        Font12x16::render_str(v.as_str())
-                            .with_stroke(Some(1u8.into()))
-                            .into_iter(),
-                    );
+
+                    Text::new(v.as_str(), Point::new(0, 0))
+                        .into_styled(text_style)
+                        .draw(&mut disp)
+                        .ok();
                 }
 
                 // Read current
@@ -112,12 +123,11 @@ fn main() -> ! {
                     write!(v, "{:3}.{:05}A", major, minor)
                         .map_err(drop)
                         .unwrap();
-                    disp.draw(
-                        Font12x16::render_str(v.as_str())
-                            .with_stroke(Some(1u8.into()))
-                            .translate(Coord::new(0, 16))
-                            .into_iter(),
-                    );
+
+                    Text::new(v.as_str(), Point::new(0, 16))
+                        .into_styled(text_style)
+                        .draw(&mut disp)
+                        .ok();
                 }
 
                 // Read power
@@ -127,12 +137,11 @@ fn main() -> ! {
                     write!(v, "{:3}.{:05}W", major, minor)
                         .map_err(drop)
                         .unwrap();
-                    disp.draw(
-                        Font12x16::render_str(v.as_str())
-                            .with_stroke(Some(1u8.into()))
-                            .translate(Coord::new(0, 32))
-                            .into_iter(),
-                    );
+
+                    Text::new(v.as_str(), Point::new(0, 32))
+                        .into_styled(text_style)
+                        .draw(&mut disp)
+                        .ok();
                 }
 
                 disp.flush().map_err(drop).unwrap();
