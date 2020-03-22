@@ -108,7 +108,7 @@ fn main() -> ! {
                     let mut v: String<U10> = String::new();
                     write!(v, "{:3}.{:05}V", major, minor)
                         .map_err(drop)
-                        .unwrap();
+                        .ok();
 
                     Text::new(v.as_str(), Point::new(0, 0))
                         .into_styled(text_style)
@@ -122,7 +122,7 @@ fn main() -> ! {
                     let mut v: String<U10> = String::new();
                     write!(v, "{:3}.{:05}A", major, minor)
                         .map_err(drop)
-                        .unwrap();
+                        .ok();
 
                     Text::new(v.as_str(), Point::new(0, 16))
                         .into_styled(text_style)
@@ -136,7 +136,7 @@ fn main() -> ! {
                     let mut v: String<U10> = String::new();
                     write!(v, "{:3}.{:05}W", major, minor)
                         .map_err(drop)
-                        .unwrap();
+                        .ok();
 
                     Text::new(v.as_str(), Point::new(0, 32))
                         .into_styled(text_style)
