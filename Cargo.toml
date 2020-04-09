@@ -21,7 +21,7 @@ readme = "README.md"
 [dependencies]
 cortex-m = "0.6"
 cortex-m-rt = "0.6"
-ssd1306 = "0.3"
+ssd1306 = { version = "0.3", path = "../ssd1306" }
 panic-halt = "0.2"
 ina260 = "0.3"
 embedded-graphics = "0.6"
@@ -39,6 +39,12 @@ version = "0.16"
 features = ["cortexm"]
 optional = false
 version = "0.1"
+
+[dependencies.display-interface]
+version = "0.2"
+
+[dependencies.display-interface-i2c]
+version = "0.2"
 
 [profile.dev]
 debug = true
