@@ -18,7 +18,7 @@ use embedded_graphics::{
 };
 use ina260::INA260;
 use ssd1306::mode::GraphicsMode;
-use ssd1306::Builder;
+use ssd1306::{Builder, I2CDIBuilder};
 
 use crate::hal::delay::Delay;
 use crate::hal::i2c::*;
@@ -76,7 +76,8 @@ fn main() -> ! {
                 .text_color(BinaryColor::On)
                 .build();
 
-            let mut disp: GraphicsMode<_> = Builder::new().connect_i2c(i2c_bus.acquire()).into();
+            let interface = I2CDIBuilder::new().init(i2c_bus.acquire());
+            let mut disp: GraphicsMode<_> = Builder::new().connect(interface).into();
 
             disp.init().map_err(drop).unwrap();
             disp.flush().map_err(drop).unwrap();

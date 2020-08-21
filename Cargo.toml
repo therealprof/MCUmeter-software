@@ -21,7 +21,7 @@ readme = "README.md"
 [dependencies]
 cortex-m = "0.6"
 cortex-m-rt = "0.6"
-ssd1306 = "0.3"
+ssd1306 = "0.4"
 panic-halt = "0.2"
 ina260 = "0.3"
 embedded-graphics = "0.6"
@@ -33,12 +33,18 @@ version = "0.2"
 
 [dependencies.stm32f0xx-hal]
 features = ["stm32f042", "rt"]
-version = "0.16"
+version = "0.17"
 
 [dependencies.shared-bus]
 features = ["cortexm"]
 optional = false
 version = "0.1"
+
+[dependencies.display-interface]
+version = "0.4"
+
+[dependencies.display-interface-i2c]
+version = "0.4"
 
 [profile.dev]
 debug = true
