@@ -28,7 +28,7 @@ You will also need to have `dfu-util` installed.
 
 Once those prerequisites are fulfilled you will need to convert the generated ELF binary into a raw binary file:
 ```
-# cargo objcopy -- -O binary target/thumbv6m-none-eabi/release/mcumeter mcumeter.bin
+# cargo objcopy --release -- -O binary mcumeter.bin
 ```
 
 To flash this file to the device you will need turn it into bootloader mode by shorting out the pins labelled **BOOT** and plugging the power. If the device is in **DFU** mode, `dfu-util` will tell you:

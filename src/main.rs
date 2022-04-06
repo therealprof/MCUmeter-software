@@ -1,24 +1,22 @@
 #![no_main]
 #![no_std]
 
+use embedded_graphics::mono_font::MonoTextStyleBuilder;
+use embedded_graphics::text::Text;
 use panic_halt as _;
+use ssd1306::prelude::*;
+use ssd1306::size::DisplaySize128x64;
+use ssd1306::Ssd1306;
 
 use stm32f0xx_hal as hal;
 
-use heapless::consts::*;
 use heapless::String;
+use ssd1306::I2CDisplayInterface;
 
 use cortex_m_rt::entry;
 
-use embedded_graphics::{
-    fonts::{Font12x16, Text},
-    pixelcolor::BinaryColor,
-    prelude::*,
-    style::TextStyleBuilder,
-};
+use embedded_graphics::{mono_font::ascii::FONT_9X15, pixelcolor::BinaryColor, prelude::*};
 use ina260::INA260;
-use ssd1306::mode::GraphicsMode;
-use ssd1306::{Builder, I2CDIBuilder};
 
 use crate::hal::delay::Delay;
 use crate::hal::i2c::*;
@@ -70,26 +68,31 @@ fn main() -> ! {
             // Setup I2C1
             let i2c = I2c::i2c1(p.I2C1, (scl, sda), 400.khz(), &mut rcc);
 
-            let i2c_bus = shared_bus::CortexMBusManager::new(i2c);
+            let i2c_bus = shared_bus::BusManagerSimple::new(i2c);
 
-            let text_style = TextStyleBuilder::new(Font12x16)
+            let text_style = MonoTextStyleBuilder::new()
+                .font(&FONT_9X15)
                 .text_color(BinaryColor::On)
                 .build();
 
-            let interface = I2CDIBuilder::new().init(i2c_bus.acquire());
-            let mut disp: GraphicsMode<_> = Builder::new().connect(interface).into();
-
+            let interface = I2CDisplayInterface::new(i2c_bus.acquire_i2c());
+            let mut disp = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+                .into_buffered_graphics_mode();
             disp.init().map_err(drop).unwrap();
             disp.flush().map_err(drop).unwrap();
 
-            let mut ina260 = INA260::new(i2c_bus.acquire(), 0x40).map_err(drop).unwrap();
+            let mut ina260 = INA260::new(i2c_bus.acquire_i2c(), 0x40)
+                .map_err(drop)
+                .unwrap();
 
             // Slow down sampling a bit for more accuracy
             ina260
                 .set_bvconvtime_mode(ina260::BVConvTime::MS4_156)
+                .map_err(drop)
                 .unwrap();
             ina260
                 .set_scconvtime_mode(ina260::SCConvTime::MS4_156)
+                .map_err(drop)
                 .unwrap();
             ina260
                 .set_averaging_mode(ina260::Averaging::AVG16)
@@ -103,47 +106,28 @@ fn main() -> ! {
                 // Clear screen contents
                 disp.clear();
 
-                // Read voltage
-                {
-                    let (major, minor) = ina260.voltage_split().map_err(drop).unwrap();
-                    let mut v: String<U10> = String::new();
-                    write!(v, "{:3}.{:05}V", major, minor)
-                        .map_err(drop)
-                        .ok();
+                // Read voltage current and power
+                let voltage = ina260.voltage_split().map_err(drop).unwrap();
+                let current = ina260.current_split().map_err(drop).unwrap();
+                let power = ina260.power_split().map_err(drop).unwrap();
 
-                    Text::new(v.as_str(), Point::new(0, 0))
-                        .into_styled(text_style)
-                        .draw(&mut disp)
-                        .ok();
-                }
+                let mut s: String<32> = String::new();
+                write!(
+                    s,
+                    "{:3}.{:05}V\n{:3}.{:05}A\n{:3}.{:05}W",
+                    voltage.0, voltage.1, current.0, current.1, power.0, power.1
+                )
+                .map_err(drop)
+                .ok();
 
-                // Read current
-                {
-                    let (major, minor) = ina260.current_split().map_err(drop).unwrap();
-                    let mut v: String<U10> = String::new();
-                    write!(v, "{:3}.{:05}A", major, minor)
-                        .map_err(drop)
-                        .ok();
-
-                    Text::new(v.as_str(), Point::new(0, 16))
-                        .into_styled(text_style)
-                        .draw(&mut disp)
-                        .ok();
-                }
-
-                // Read power
-                {
-                    let (major, minor) = ina260.power_split().map_err(drop).unwrap();
-                    let mut v: String<U10> = String::new();
-                    write!(v, "{:3}.{:05}W", major, minor)
-                        .map_err(drop)
-                        .ok();
-
-                    Text::new(v.as_str(), Point::new(0, 32))
-                        .into_styled(text_style)
-                        .draw(&mut disp)
-                        .ok();
-                }
+                Text::with_baseline(
+                    s.as_str(),
+                    Point::zero(),
+                    text_style,
+                    embedded_graphics::text::Baseline::Top,
+                )
+                .draw(&mut disp)
+                .ok();
 
                 disp.flush().map_err(drop).unwrap();
 
