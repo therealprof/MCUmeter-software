@@ -104,7 +104,7 @@ fn main() -> ! {
                 led.set_low().ok();
 
                 // Clear screen contents
-                disp.clear();
+                disp.clear_buffer();
 
                 // Read voltage current and power
                 let voltage = ina260.voltage_split().map_err(drop).unwrap();

@@ -21,11 +21,11 @@ readme = "README.md"
 [dependencies]
 cortex-m = "0.7"
 cortex-m-rt = "0.7"
-ssd1306 = "0.7"
-panic-halt = "0.2"
+ssd1306 = "0.8"
+panic-halt = "1.0"
 ina260 = "0.3"
-embedded-graphics = "0.7"
-heapless = "0.7"
+embedded-graphics = "0.8"
+heapless = "0.8"
 
 [dependencies.embedded-hal]
 features = ["unproven"]
@@ -37,13 +37,7 @@ version = "0.18"
 
 [dependencies.shared-bus]
 optional = false
-version = "0.2.0-alpha.1"
-
-[dependencies.display-interface]
-version = "0.4"
-
-[dependencies.display-interface-i2c]
-version = "0.4"
+version = "0.3.1"
 
 [profile.dev]
 debug = true
